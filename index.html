@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Image Links</title>
+  <title>EcoTech Image Links</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     .thumbs { display: flex; flex-wrap: wrap; gap: 16px; }
@@ -13,7 +13,6 @@
   </style>
 </head>
 <body>
-  <h2>Example Images with Copyable Links</h2>
   <div class="thumbs" id="list"></div>
 
   <script>
@@ -38,7 +37,10 @@
       const input = div.querySelector("input");
 
       btn.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(url);
+        const baseUrl = "https://chandan-chetia.github.io/EcoTech_Img/";
+        const imageName = url.split("/").pop(); // Get the filename from the URL
+        const fullUrl = baseUrl + imageName;
+        await navigator.clipboard.writeText(fullUrl);
         btn.textContent = "Copied ✓";
         setTimeout(() => btn.textContent = "Copy Link", 1200);
       });
