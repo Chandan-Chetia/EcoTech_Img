@@ -3,138 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Image Link Uploader</title>
+  <title>Image Links</title>
   <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{display:flex;flex-direction:column;gap:18px;align-items:center;padding:28px}
-    .card{width:100%;max-width:900px;border:1px solid #e6e6e6;border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,0.03)}
-    .drop{border:2px dashed #d0d0d0;border-radius:8px;padding:26px;text-align:center;cursor:pointer}
-    .drop.dragover{background:#f5fbff;border-color:#6aa3ff}
-    .thumbs{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
-    .thumb{width:180px;border:1px solid #eee;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:8px}
-    .thumb img{width:100%;height:120px;object-fit:cover;border-radius:6px}
-    .row{display:flex;gap:8px;align-items:center}
-    button{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
-    .btn-copy{background:#0066ff;color:white}
-    .btn-remove{background:#eee}
-    small{color:#666}
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .thumbs { display: flex; flex-wrap: wrap; gap: 16px; }
+    .thumb { width: 600px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; }
+    .thumb img { width: 100%; height: 350px; object-fit: cover; border-radius: 6px; }
+    button { margin-top: 8px; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; background: #0066ff; color: white; }
   </style>
 </head>
 <body>
-  <h2>Image-only uploader — copy links fast</h2>
-  <div class="card">
-    <label class="drop" id="dropArea">
-      <input id="fileInput" type="file" accept="image/*" multiple style="display:none">
-      <div><strong>Click or drop images here</strong></div>
-      <div><small>(Only images are accepted — jpg, png, webp, gif...)</small></div>
-    </label>
-
-    <div class="thumbs" id="list"></div>
-
-    <p style="margin-top:14px"><small>Links are <em>browser blob URLs</em> (work in this browser session). If you want permanent hosted links, I can help add Firebase Storage or another hosting option.</small></p>
-  </div>
+  <h2>Example Images with Copyable Links</h2>
+  <div class="thumbs" id="list"></div>
 
   <script>
-    const dropArea = document.getElementById('dropArea');
-    const fileInput = document.getElementById('fileInput');
-    const list = document.getElementById('list');
+    const images = [
+      "e2.jpeg",
+      "https://picsum.photos/300/200?random=2",
+      "https://picsum.photos/300/200?random=3",
+      "https://picsum.photos/300/200?random=4"
+    ];
 
-    // helper: human-readable size
-    function niceSize(bytes){
-      if(bytes<1024) return bytes+ ' B';
-      const kb = bytes/1024;
-      if(kb<1024) return kb.toFixed(1)+' KB';
-      return (kb/1024).toFixed(2)+' MB';
-    }
+    const list = document.getElementById("list");
 
-    // Accept only image MIME types
-    function isImage(file){
-      return file && file.type && file.type.startsWith('image/');
-    }
+    images.forEach(url => {
+      const div = document.createElement("div");
+      div.className = "thumb";
+      div.innerHTML = `
+        <img src="${url}" alt="Image">
+        <input type="text" value="${url}" readonly style="width:100%;margin-top:6px">
+        <button>Copy Link</button>
+      `;
+      const btn = div.querySelector("button");
+      const input = div.querySelector("input");
 
-    function handleFiles(files){
-      [...files].forEach(file => {
-        if(!isImage(file)){
-          alert(`${file.name} is not an image — skipped.`);
-          return;
-        }
-
-        // create a blob URL (ephemeral)
-        const url = URL.createObjectURL(file);
-
-        const div = document.createElement('div');
-        div.className = 'thumb';
-        div.innerHTML = `
-          <img src="${url}" alt="preview">
-          <div style="font-size:13px"><strong>${file.name}</strong></div>
-          <div class="row"><small>${niceSize(file.size)}</small></div>
-          <div class="row">
-            <button class="btn-copy">Copy link</button>
-            <button class="btn-remove">Remove</button>
-          </div>
-          <input class="hidden-url" type="text" value="${url}" style="position:absolute;left:-9999px">
-        `;
-
-        const copyBtn = div.querySelector('.btn-copy');
-        const removeBtn = div.querySelector('.btn-remove');
-        const hiddenInput = div.querySelector('.hidden-url');
-
-        copyBtn.addEventListener('click', async () => {
-          try{
-            await navigator.clipboard.writeText(hiddenInput.value);
-            copyBtn.textContent = 'Copied ✓';
-            setTimeout(()=> copyBtn.textContent = 'Copy link', 1400);
-          }catch(e){
-            // fallback
-            hiddenInput.select();
-            document.execCommand('copy');
-            copyBtn.textContent = 'Copied ✓';
-            setTimeout(()=> copyBtn.textContent = 'Copy link', 1400);
-          }
-        });
-
-        removeBtn.addEventListener('click', ()=>{
-          // revoke blob URL and remove element
-          URL.revokeObjectURL(url);
-          div.remove();
-        });
-
-        list.appendChild(div);
+      btn.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(url);
+        btn.textContent = "Copied ✓";
+        setTimeout(() => btn.textContent = "Copy Link", 1200);
       });
-    }
 
-    // click to open file picker
-    dropArea.addEventListener('click', ()=> fileInput.click());
-    fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-    // drag events
-    ['dragenter','dragover'].forEach(ev => {
-      dropArea.addEventListener(ev, (e)=>{
-        e.preventDefault(); e.stopPropagation();
-        dropArea.classList.add('dragover');
-      });
+      list.appendChild(div);
     });
-    ['dragleave','drop'].forEach(ev => {
-      dropArea.addEventListener(ev, (e)=>{
-        e.preventDefault(); e.stopPropagation();
-        dropArea.classList.remove('dragover');
-      });
-    });
-
-    dropArea.addEventListener('drop', e => {
-      const dt = e.dataTransfer;
-      if(dt && dt.files) handleFiles(dt.files);
-    });
-
-    // optional: clear blob URLs when page unloads
-    window.addEventListener('beforeunload', ()=>{
-      // revoke all object URLs created inside thumbs
-      document.querySelectorAll('.hidden-url').forEach(inp => URL.revokeObjectURL(inp.value));
-    });
-
-    // NOTES: this example generates browser "blob:" URLs that are only valid locally in this browser session.
-    // If you need permanent public links, connect this uploader to a server or Firebase Storage and replace URL.createObjectURL
-    // with the server's returned public URL after upload. If you want, I can add Firebase Storage code — say the word.
   </script>
 </body>
 </html>
